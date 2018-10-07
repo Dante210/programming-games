@@ -1,0 +1,32 @@
+Task written by @arturaz. You can find him on GitHub
+
+You are given such rules for a card game:
+
+  You use full card deck without Jokers (52 cards).
+  At the start of the game a trump suite gets selected randomly.
+  A deck is shuffled and each player gets half of the cards.
+  Each turn consists of:
+
+    1. Both players revealing their topmost card.
+
+    2. Comparing the card values.
+       Cards are compared by their rank (lowest to highest: 2 to 10, Jack, Queen, King, Ace) 
+       with trump cards being higher than non-trump cards.
+
+    3. Player with a higher ranking card gets both cards and sets them to a separate pile (called score pile).
+       If the cards are of equal value, each player gets his own card back to the score pile.
+
+  A game is played until both players do not have cards.
+  At the end of the game a winning player is one that has more cards in their score pile.
+  Equal number of cards results in a tie.
+
+Write an implementation of this game in a statically typed language of your liking.
+
+Notes for implementation:
+
+  No visuals or interaction is needed.
+  Produced result should be a data structure representing last state of the game.
+  Write type safe code.
+  Illegal states in the game should be unrepresentable.
+  That means it should not be possible to call a method with illegal arguments, throw an exception when called or have methods that do nothing.
+  Write code in purely functional manner (if you know how to).
