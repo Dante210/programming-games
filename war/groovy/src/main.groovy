@@ -1,13 +1,16 @@
+import groovy.transform.EqualsAndHashCode
 import jdk.nashorn.internal.ir.annotations.Immutable
+
+import java.util.function.Function
 
 class Program {
   static void main(String[] args) {
     Random random = new Random()
     println "Random suite is : ${ getRandomSuite random }"
 
-    List<Card> shuffledDeck = shuffleDeckImmutable generateDeck()
-    List<List<Card>> splittedLists = shuffledDeck.collate 2
+    List<Card> shuffledDeck = shuffleDeckImmutable generateStandardDeck()
 
+    List<List<Card>> splittedLists = shuffledDeck.collate (Math.round(shuffledDeck.size() / 2) as int)
     Player firstPlayer = new Player(splittedLists[0], [])
     Player secondPlayer = new Player(splittedLists[1], [])
 
@@ -18,7 +21,7 @@ class Program {
     Suite.values()[random.nextInt(Suite.values().length)]
   }
 
-  static List<Card> generateDeck() {
+  static List<Card> generateStandardDeck() {
     List<Card> cards = []
     for (Rank r : Rank.values()) {
       for (Suite s : Suite.values()) {
@@ -39,6 +42,7 @@ class Program {
 enum Suite { Hearths, Spades, Clubs, Diamonds }
 enum Rank { Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace }
 
+@EqualsAndHashCode
 @Immutable class Card {
   Suite suite
   Rank rank
