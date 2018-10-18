@@ -67,3 +67,30 @@ enum Rank { Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, K
   }
 }
 
+@Immutable class ErrorMsg{
+  String message
+}
+
+
+interface Either<A, B> {
+  public <C> C fold(Function<A, C> onLeft, Function<B, C> onRight)
+}
+
+class Left<A, B> implements Either<A, B> {
+  final A a;
+
+  @Override
+  def <C> C fold(Function<A, C> onLeft, Function<B, C> onRight) {
+    onLeft.apply(a)
+  }
+}
+
+class Right<A, B> implements Either<A, B> {
+  final B b;
+
+  @Override
+  def <C> C fold(Function<A, C> onLeft, Function<B, C> onRight) {
+    onRight.apply(b)
+  }
+}
+
