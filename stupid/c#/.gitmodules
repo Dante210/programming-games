@@ -1,0 +1,3 @@
+[submodule "FunkyLib"]
+	path = FunkyLib
+	url = git@github.com:Dante210/FunkyLib.git
