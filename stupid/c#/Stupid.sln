@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stupid", "Stupid.csproj", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StupidTests", "StupidTests\StupidTests.csproj", "{9D5E5B6B-9908-46ED-8820-CD3AE9A8A551}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pzd.lib", "..\..\pzd.lib\pzd.lib.csproj", "{D3964F5A-7C08-4E4D-A52F-8D3A151F47A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{9D5E5B6B-9908-46ED-8820-CD3AE9A8A551}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9D5E5B6B-9908-46ED-8820-CD3AE9A8A551}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9D5E5B6B-9908-46ED-8820-CD3AE9A8A551}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3964F5A-7C08-4E4D-A52F-8D3A151F47A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3964F5A-7C08-4E4D-A52F-8D3A151F47A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3964F5A-7C08-4E4D-A52F-8D3A151F47A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3964F5A-7C08-4E4D-A52F-8D3A151F47A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

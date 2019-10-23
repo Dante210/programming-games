@@ -1,0 +1,3 @@
+[submodule "pzd.lib"]
+	path = pzd.lib
+	url = git@github.com:Donatas-L/pzd.lib.git

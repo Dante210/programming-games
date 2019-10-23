@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using funkylib;
+using pzd.lib.functional;
 
 namespace Stupid {
   public enum Suit {
@@ -56,30 +56,30 @@ namespace Stupid {
 
     public static Option<Suit> parseSuite(string indicator) {
       switch (indicator) {
-        case "C": return Suit.Clubs.some();
-        case "S": return Suit.Spades.some();
-        case "H": return Suit.Hearts.some();
-        case "D": return Suit.Diamonds.some();
-        default: return Option.None;
+        case "C": return new Option<Suit>(Suit.Clubs);
+        case "S": return new Option<Suit>(Suit.Spades);
+        case "H": return new Option<Suit>(Suit.Hearts);
+        case "D": return new Option<Suit>(Suit.Diamonds);
+        default: return Option<Suit>.None;
       }
     }
 
     static Option<Rank> parseRank(string indicator) {
       switch (indicator) {
-        case "2": return Rank.Two.some();
-        case "3": return Rank.Three.some();
-        case "4": return Rank.Four.some();
-        case "5": return Rank.Five.some();
-        case "6": return Rank.Six.some();
-        case "7": return Rank.Seven.some();
-        case "8": return Rank.Eight.some();
-        case "9": return Rank.Nine.some();
-        case "T": return Rank.Ten.some();
-        case "J": return Rank.Jack.some();
-        case "Q": return Rank.Queen.some();
-        case "K": return Rank.King.some();
-        case "A": return Rank.Ace.some();
-        default: return Option.None;
+        case "2": return new Option<Rank>(Rank.Two);
+        case "3": return new Option<Rank>(Rank.Three);
+        case "4": return new Option<Rank>(Rank.Four);
+        case "5": return new Option<Rank>(Rank.Five);
+        case "6": return new Option<Rank>(Rank.Six);
+        case "7": return new Option<Rank>(Rank.Seven);
+        case "8": return new Option<Rank>(Rank.Eight);
+        case "9": return new Option<Rank>(Rank.Nine);
+        case "T": return new Option<Rank>(Rank.Ten);
+        case "J": return new Option<Rank>(Rank.Jack);
+        case "Q": return new Option<Rank>(Rank.Queen);
+        case "K": return new Option<Rank>(Rank.King);
+        case "A": return new Option<Rank>(Rank.Ace);
+        default: return Option<Rank>.None;
       }
     }
 

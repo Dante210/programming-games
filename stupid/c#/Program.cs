@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using funkylib;
+using pzd.lib;
+using pzd.lib.exts;
+using pzd.lib.functional;
 using Cards = System.Collections.Immutable.ImmutableList<Stupid.Card>;
 using CardPairs = System.Collections.Immutable.ImmutableList<Stupid.CardPair>;
-using File = funkylib.File;
 
 namespace Stupid {
   enum Result {
@@ -67,7 +68,7 @@ namespace Stupid {
         if (!gameStateOpt.isSome)
           return $"Some rounds couldn't be parsed";
         else
-          parsedGameStates.Add(gameStateOpt._unsafe);
+          parsedGameStates.Add(gameStateOpt.__unsafeGet);
       }
       return parsedGameStates.ToImmutableList();
     }
@@ -116,9 +117,9 @@ namespace Stupid {
         ));
  
       return reflectCard(state).fold(
-        onSome: reflectCard => play(reflectToOpponent(state, reflectCard)),
+        ifSome: reflectCard => play(reflectToOpponent(state, reflectCard)),
 
-        onNone: () => cardToDefeatPair(state.onTable, state.trumpComparer).fold(
+        ifNone: () => cardToDefeatPair(state.onTable, state.trumpComparer).fold(
           () => play(
             pickForAttack(state).fold(
               () => cannotAttack(state),
@@ -150,14 +151,14 @@ namespace Stupid {
 
     static GameState attack(GameState state, Card cardToAttack) {
       var newAttacker = state.attacker.withCards(_ => _.Remove(cardToAttack));
-      var newOnTable = state.onTable.Add(new CardPair(cardToAttack, Option.None));
+      var newOnTable = state.onTable.Add(new CardPair(cardToAttack, Option<Card>.None));
       return state.withAttacker(newAttacker).withOnTable(newOnTable);
     }
 
     static GameState reflectToOpponent(GameState state, Card reflectCard) {
       var newAttacker = state.defender.withCards(_ => _.Remove(reflectCard));
       var newDefender = new Player(state.attacker.cards, state.attacker.number);
-      var newCardsOnTable = state.onTable.Add(new CardPair(reflectCard, Option.None));
+      var newCardsOnTable = state.onTable.Add(new CardPair(reflectCard, Option<Card>.None));
       return state.withAttacker(newAttacker).withDefender(newDefender).withOnTable(newCardsOnTable);
     }
 
@@ -168,8 +169,8 @@ namespace Stupid {
       );
 
     static Cards allCardsOnTable(CardPairs onTable) {
-      var allPlacedCards = onTable.map(pair => pair.placed);
-      var allCoveredCards = onTable.map(pair => pair.cover).asEnumerable();
+      var allPlacedCards = onTable.Select(pair => pair.placed);
+      var allCoveredCards = onTable.SelectMany(pair => pair.cover.asEnumerable);
       return allPlacedCards.Concat(allCoveredCards).ToImmutableList();
     }
 
@@ -190,7 +191,7 @@ namespace Stupid {
 
       var newOnTable = state.onTable.Replace(
         toDefeat,
-        new CardPair(toDefeat.placed, defenseCard.some())
+        new CardPair(toDefeat.placed, new Option<Card>(defenseCard))
       );
 
       return state.withDefender(newDefender).withOnTable(newOnTable);
@@ -206,7 +207,7 @@ namespace Stupid {
 
       return 
         state.onTable.Count + 1 > state.attacker.cards.Count 
-        ? Option.None 
+        ? Option<Card>.None
         : reflectCards.head();
     }
 
@@ -239,22 +240,15 @@ namespace Stupid {
     }
 
     public static Option<Card> pickForAttack (GameState state) {
-      if (state.defender.cards.IsEmpty) return Option.None;
+      if (state.defender.cards.IsEmpty) return Option<Card>.None;
       var allOnTable = allCardsOnTable(state.onTable);
 
       var possiblePicks =
         allOnTable
-        .flatmap(cardOnTable => state.attacker.cards.Where(attackersCard => cardOnTable.rank == attackersCard.rank))
+        .SelectMany(cardOnTable => state.attacker.cards.Where(attackersCard => cardOnTable.rank == attackersCard.rank))
         .OrderBy(_ => _, state.trumpComparer);
 
-      return possiblePicks.head(); 
-    }
-  }
-
-  public static class IEnumerableExts {
-    public static Option<A> head<A>(this IEnumerable<A> enumerable) {
-      foreach (var a in enumerable) return a.some();
-      return Option.None;
+      return possiblePicks.head();
     }
   }
 }

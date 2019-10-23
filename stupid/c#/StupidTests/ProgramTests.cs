@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Collections.Immutable;
-using funkylib;
+using pzd.lib.functional;
 
 namespace Stupid.Tests {
   [TestFixture()]
@@ -11,8 +11,8 @@ namespace Stupid.Tests {
         .Add(new Card(Suit.Clubs, Rank.Ace))
         .Add(new Card(Suit.Hearts, Rank.Four));
       var defender = new Player(defenderCards, new PlayerNumber(1));
-      var toDefeatPair = new CardPair(new Card(Suit.Spades, Rank.King), Option.None);
-      var expected = new Card(Suit.Hearts, Rank.Four).some();
+      var toDefeatPair = new CardPair(new Card(Suit.Spades, Rank.King), Option<Card>.None);
+      var expected = new Option<Card>(new Card(Suit.Hearts, Rank.Four));
       var actual = Program.pickForDefense(defender, toDefeatPair, Suit.Hearts, Card.comparerForTrumpSuit(Suit.Hearts));
       Assert.AreEqual(expected, actual);
     }
@@ -26,12 +26,12 @@ namespace Stupid.Tests {
         .Add(new Card(Suit.Hearts, Rank.Four));
       var defender = new Player(defenderCards, new PlayerNumber(1));
       var onTable = ImmutableList.Create<CardPair>()
-        .Add(new CardPair(new Card(Suit.Diamonds, Rank.Five), new Card(Suit.Diamonds, Rank.Jack).some()))
-        .Add(new CardPair(new Card(Suit.Hearts, Rank.Eight), new Card(Suit.Spades, Rank.Six).some()));
+        .Add(new CardPair(new Card(Suit.Diamonds, Rank.Five), new Option<Card>(new Card(Suit.Diamonds, Rank.Jack))))
+        .Add(new CardPair(new Card(Suit.Hearts, Rank.Eight), new Option<Card>(new Card(Suit.Spades, Rank.Six))));
       var attackerCards = ImmutableList.Create<Card>()
         .Add(new Card(Suit.Hearts, Rank.Five));
       var attacker = new Player(attackerCards, new PlayerNumber(2));
-      var expected = new Card(Suit.Hearts, Rank.Five).some();
+      var expected = new Option<Card>(new Card(Suit.Hearts, Rank.Five));
 
       var gameState = new GameState(attacker, defender, onTable, trumpSuite);
       var actual = Program.pickForAttack(gameState);
@@ -41,9 +41,9 @@ namespace Stupid.Tests {
     [Test()]
     public void cardToDefeatPairTest() {
       var onTable = ImmutableList.Create<CardPair>()
-        .Add(new CardPair(new Card(Suit.Diamonds, Rank.Five), new Card(Suit.Diamonds, Rank.Jack).some()))
-        .Add(new CardPair(new Card(Suit.Hearts, Rank.Eight), Option.None));
-      var expected = new CardPair(new Card(Suit.Hearts, Rank.Eight), Option.None).some();
+        .Add(new CardPair(new Card(Suit.Diamonds, Rank.Five), new Option<Card>(new Card(Suit.Diamonds, Rank.Jack))))
+        .Add(new CardPair(new Card(Suit.Hearts, Rank.Eight), Option<Card>.None));
+      var expected = new Option<CardPair>(new CardPair(new Card(Suit.Hearts, Rank.Eight), Option<Card>.None));
       var actual = Program.cardToDefeatPair(onTable, Card.comparerForTrumpSuit(Suit.Hearts));
       Assert.AreEqual(expected, actual);
     }
@@ -55,14 +55,14 @@ namespace Stupid.Tests {
         .Add(new Card(Suit.Hearts, Rank.Five));
       var attacker = new Player(attackerCards, new PlayerNumber(2));
 
-      var onTable = ImmutableList.Create(new CardPair(new Card(Suit.Clubs, Rank.Ace), Option.None));
+      var onTable = ImmutableList.Create(new CardPair(new Card(Suit.Clubs, Rank.Ace), Option<Card>.None));
 
       var defenderCards = ImmutableList.Create<Card>()
         .Add(new Card(Suit.Spades, Rank.Ace))
         .Add(new Card(Suit.Hearts, Rank.Four));
 
       var defender = new Player(defenderCards, new PlayerNumber(1));
-      var expected = Option.None;
+      var expected = Option<Card>.None;
       var state = new GameState(attacker, defender, onTable, trumpSuite, Card.comparerForTrumpSuit(trumpSuite));
       var actual = Program.reflectCard(state);
       Assert.AreEqual(expected, actual);

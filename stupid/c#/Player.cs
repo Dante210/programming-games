@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using funkylib;
+using pzd.lib.functional;
 
 namespace Stupid {
   public struct Player {
@@ -21,10 +21,10 @@ namespace Stupid {
 
       foreach (var card in playerCards) {
         var parsedCardOpt = Card.parse(card);
-        if (!parsedCardOpt.isSome) return Option.None;
-        parsedCards.Add(parsedCardOpt._unsafe);
+        if (!parsedCardOpt.isSome) return Option<Player>.None;
+        parsedCards.Add(parsedCardOpt.__unsafeGet);
       }
-      return new Player(parsedCards.ToImmutableList(), number);
+      return new Option<Player>(new Player(parsedCards.ToImmutableList(), number));
     }
   }
 
