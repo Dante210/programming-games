@@ -51,7 +51,6 @@ class Rank private (val rank : Char) extends Ordered[Rank] {
   }
 
   override def toString: String = rank.toString
-
   override def hashCode(): Int = rank
 }
 object Rank {
@@ -247,7 +246,8 @@ case class GameStateLog(value: String)
 
 object Main {
   def main(args: Array[String]): Unit = {
-    println(runGame("test1.txt")(GameStateLog("").some))
+    val debugLogOn : Boolean = true
+    println(runGame("data.txt")(Option.when(debugLogOn)(GameStateLog(""))))
   }
 
   def runGame(gameResourceFilename: String)(implicit log: Option[GameStateLog]): String =
@@ -316,10 +316,7 @@ object Main {
             }
         }
       case None => state.offense.cards.cardToAttack match {
-        case Some(value) => {
-
-          play(state.attack(value))(addToLog(s"Turn $turn \nAttacking with $value"))(turn + 1)
-        }
+        case Some(value) => play(state.attack(value))(addToLog(s"Turn $turn \nAttacking with $value"))(turn + 1)
         case None => Valid(state, addToLog("There are no cards to attack"))
       }
     }
