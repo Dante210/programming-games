@@ -20,6 +20,8 @@ class Suite private (val suite : Char) extends Ordered[Suite] {
     case 'S' => "♠"
     case _ => "???"
   }
+
+  override def hashCode(): Int = suite
 }
 object Suite {
   val validOrderedSuites: Array[Char] = Array(
@@ -40,8 +42,6 @@ object Suite {
 class Rank private (val rank : Char) extends Ordered[Rank] {
   override def compare(that: Rank): Int = {
     val indexedSeq = Rank.validOrderedRanks.toIndexedSeq
-    val a = indexedSeq.indexOf(rank)
-    val b = indexedSeq.indexOf(that.rank)
     indexedSeq.indexOf(rank) - indexedSeq.indexOf(that.rank)
   }
 
@@ -51,6 +51,8 @@ class Rank private (val rank : Char) extends Ordered[Rank] {
   }
 
   override def toString: String = rank.toString
+
+  override def hashCode(): Int = rank
 }
 object Rank {
   val validOrderedRanks: Array[Char] = Array(
@@ -227,7 +229,7 @@ case class GameState(offense: Player, defense: Player, cardsOnTable: Set[CardPai
     val cardsCanBeAdded = defense.cards.value.size - getCardsToDefeat.fold(ifEmpty = 0)(c => c.value.size)
     Option.when(cardsCanBeAdded > 0)(
       offense.cards.value
-      .filter(card => getAllCardsOnTable.map(c => c.rank).contains(card.rank))
+      .filter(card => getAllCardsOnTable.map(c => c.rank).contains(card.rank)      )
       .take(cardsCanBeAdded)
     ).flatMap(cards => if (cards.isEmpty) None else cards.some)
   }
@@ -308,7 +310,7 @@ object Main {
                   }
                 }
               case None => state.offenseReinforce match {
-                case Some(value) =>play(state.reinforce(value))(addToLog(s"Offense reinforce with $value"))
+                case Some(value) => play(state.reinforce(value))(addToLog(s"Offense reinforce with $value"))
                 case None => play(state.removeCardsFromTable.swapRoles)(addToLog("Turn ended"))
               }
             }
