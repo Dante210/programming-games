@@ -2,6 +2,9 @@ import cats.data.Validated
 import cats.data.Validated._
 import cats.implicits._
 
+import monocle.Lens
+import monocle.macros.GenLens
+
 import scala.collection.SortedSet
 
 class Suite private (val suite : Char) extends Ordered[Suite] {
@@ -95,8 +98,7 @@ case class Cards private(value: SortedSet[Card]) {
   def cardToAttack : Option[Card] = this.value.headOption
   def cardToReflect(rankToReflect: Rank): Option[Card] = this.value.find(card => card.rank == rankToReflect)
 
-  def withCards(fn : SortedSet[Card] => SortedSet[Card]): Cards = this.copy(value = fn(value))
-  def removeCards(cardsToRemove: scala.collection.Set[Card]): Cards = withCards(cards => value.diff(cardsToRemove))
+  def removeCards(cardsToRemove: scala.collection.Set[Card]): Cards = this.copy(value = value.diff(cardsToRemove))
 }
 object Cards {
   def apply(cards: Set[Card])(implicit trumpSuite: Suite): Cards = {
@@ -111,19 +113,15 @@ object Cards {
 
   def parse(s: String, separator: Char = ' ')(implicit trumpSuite: Suite): Validated[ErrorMsg, Cards] =
     s.trim.split(separator)
-      .foldLeft(
-        Valid(Set.empty[Card]): Validated[ErrorMsg, Set[Card]]
-      )(
-        (cards, s) => Card.parse(s).andThen(c => cards.map(cc => cc + c))
-      ).map(cards => Cards(cards))
+      .foldLeft(Valid(Set.empty[Card]): Validated[ErrorMsg, Set[Card]]
+      )((cards, s) => Card.parse(s).andThen(c => cards.map(cc => cc + c)))
+      .map(cards => Cards(cards))
 }
 
 case class CardPair(placed: Card, covering: Option[Card]) {
   override def toString: String = s"$placed/${covering.fold(ifEmpty = "-")(c => c.toString)}"
 }
 case class Player(id: Int, cards: Cards) {
-  def withCards(fn: Cards => Cards): Player = this.copy(cards = fn(cards))
-
   override def toString: String = s"P$id[$cards]"
 }
 object Players {
@@ -149,9 +147,13 @@ case class GameState(offense: Player, defense: Player, cardsOnTable: Set[CardPai
      t: $cardsOnTable
   ]"""
 
+  private val withOffense : Lens[GameState, Player] = GenLens[GameState](_.offense)
+  private val withDefense : Lens[GameState, Player] = GenLens[GameState](_.defense)
+
+  private val withCards : Lens[Player, Cards] = GenLens[Player](_.cards)
+  private val withCardsValue : Lens[Cards, SortedSet[Card]] = GenLens[Cards](_.value)
+
   private def withCardsOnTable(fn: Set[CardPair] => Set[CardPair]) = this.copy(cardsOnTable = fn(cardsOnTable))
-  private def withOffense(fn: Player => Player) = this.copy(offense = fn(offense))
-  private def withDefense(fn: Player => Player) = this.copy(defense = fn(defense))
 
   private def addCardsToTable(cardsToAdd: Iterable[Card]) =
     withCardsOnTable(onTable => onTable ++ cardsToAdd.map(c => CardPair(c, None)))
@@ -172,10 +174,7 @@ case class GameState(offense: Player, defense: Player, cardsOnTable: Set[CardPai
   private def getAllCardsOnTable =
     cardsOnTable.flatMap(pair => pair.covering.map(c => c).toList :+ pair.placed)
 
-  def swapRoles: GameState =
-    this
-      .withOffense(_ => defense)
-      .withDefense(_ => offense)
+  def swapRoles: GameState = withOffense.modify(_ => defense).andThen(withDefense.modify(_ => offense))(this)
 
   def noCardsLeftToPlay: Boolean = cardsOnTable.isEmpty && (offense.cards.value.isEmpty || defense.cards.value.isEmpty)
 
@@ -199,15 +198,13 @@ case class GameState(offense: Player, defense: Player, cardsOnTable: Set[CardPai
   }
 
   def attack(pickedCardForAttack: Card): GameState =
-    this
-      .withOffense(offense => offense.withCards(c => c.removeCards(Set(pickedCardForAttack))))
-      .addCardsToTable(Set.empty + pickedCardForAttack)
+    (withOffense composeLens withCards).modify(c => c.removeCards(Set(pickedCardForAttack)))(this)
+    .addCardsToTable(Set.empty + pickedCardForAttack)
 
   def reflect(cardUsedToReflect: Card): GameState =
-    this
-      .withDefense(defense => defense.withCards(c => c.removeCards(Set(cardUsedToReflect))))
-      .addCardsToTable(Set.empty + cardUsedToReflect)
-      .swapRoles
+    (withDefense composeLens withCards).modify(c => c.removeCards(Set(cardUsedToReflect)))(this)
+    .addCardsToTable(Set.empty + cardUsedToReflect)
+    .swapRoles
 
   def defend(cardToDefeat: Card, defendingCard: Card): Validated[ErrorMsg, GameState] =
     cardsOnTable
@@ -216,13 +213,15 @@ case class GameState(offense: Player, defense: Player, cardsOnTable: Set[CardPai
       .fold[Validated[ErrorMsg, GameState]](
         ifEmpty = Invalid(ErrorMsg(s"$cardToDefeat wasn't found on table"))
       )(newCardsOnTable =>
-        Valid(withCardsOnTable(_ => newCardsOnTable).withDefense(d => d.withCards(c => c.removeCards(Set(defendingCard)))))
+        Valid(
+          (withDefense composeLens withCards).modify(c => c.removeCards(Set(defendingCard)))(this)
+          .withCardsOnTable(_ => newCardsOnTable)
+        )
       )
 
   def reinforce(extraCards: SortedSet[Card]): GameState =
-    this
-      .withOffense(offense => offense.withCards(c => c.removeCards(extraCards)))
-      .addCardsToTable(extraCards)
+    (withOffense composeLens withCards).modify(c => c.removeCards(extraCards))(this)
+    .addCardsToTable(extraCards)
 
   def offenseReinforce: Option[SortedSet[Card]] = {
     val cardsCanBeAdded = defense.cards.value.size - getCardsToDefeat.fold(ifEmpty = 0)(c => c.value.size)
@@ -236,9 +235,8 @@ case class GameState(offense: Player, defense: Player, cardsOnTable: Set[CardPai
   def removeCardsFromTable: GameState = this.withCardsOnTable(_ => Set.empty)
 
   def defensePicksCardsFromTable: GameState =
-    this
-      .withDefense(d => d.withCards(cards => cards.withCards(c => c ++ getAllCardsOnTable)))
-      .withCardsOnTable(_ => Set.empty)
+    (withDefense composeLens withCards composeLens withCardsValue).modify(c => c ++ getAllCardsOnTable)(this)
+    .withCardsOnTable(_ => Set.empty)
 }
 
 case class ErrorMsg(error: String)
@@ -286,7 +284,8 @@ object Main {
     else Valid((l.head.head, l.tail))
   }
 
-  def play(state: GameState)(log: Option[GameStateLog])(implicit turn : Int = 1) : Validated[ErrorMsg, (GameState, Option[GameStateLog])] = {
+  def play(state: GameState)(log: Option[GameStateLog])(implicit turn : Int = 1)
+  : Validated[ErrorMsg, (GameState, Option[GameStateLog])] = {
     def addToLog(s: String) = log.map(l => GameStateLog(l.value + s"$s: $state\n"))
     if (state.noCardsLeftToPlay) return Valid((state, addToLog("End of the game")))
 
