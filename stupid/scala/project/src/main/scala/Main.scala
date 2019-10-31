@@ -7,71 +7,13 @@ import monocle.macros.GenLens
 
 import scala.collection.SortedSet
 
-class Suite private (val suite : Char) extends Ordered[Suite] {
-  override def compare(that: Suite): Int = {
-    val indexedSeq = Suite.validOrderedSuites.toIndexedSeq
-    indexedSeq.indexOf(suite) - indexedSeq.indexOf(that.suite)
-  }
-  override def equals(o: Any): Boolean = o match {
-    case that: Suite => compare(that) == 0
-    case _ => false
-  }
-  override def toString: String = suite match {
-    case 'H' => "♥"
-    case 'D' => "♦"
-    case 'C' => "♣"
-    case 'S' => "♠"
-    case _ => "???"
-  }
+abstract class DefinedValue extends Ordered[DefinedValue] {
+  def value : Int
+  def asString : String
 
-  override def hashCode(): Int = suite
-}
-object Suite {
-  val validOrderedSuites: Array[Char] = Array(
-    'H', // Hearths
-    'D', // Diamonds
-    'C', // Clubs
-    'S'  // Spades
-  )
-
-  def apply(suite: Char): Validated[ErrorMsg, Suite] = {
-    if (validOrderedSuites.contains(suite)) Valid(new Suite(suite))
-    else Invalid(ErrorMsg(s"$suite is not valid field for ${Suite.getClass.getName}"))
-  }
-
-  def unsafeApply(suite: Char): Suite = new Suite(suite)
-}
-
-class Rank private (val rank : Char) extends Ordered[Rank] {
-  override def compare(that: Rank): Int = {
-    val indexedSeq = Rank.validOrderedRanks.toIndexedSeq
-    indexedSeq.indexOf(rank) - indexedSeq.indexOf(that.rank)
-  }
-
-  override def equals(o: Any): Boolean = o match {
-    case that: Rank => compare(that) == 0
-    case _ => false
-  }
-
-  override def toString: String = rank.toString
-  override def hashCode(): Int = rank
-}
-object Rank {
-  val validOrderedRanks: Array[Char] = Array(
-    '2', '3', '4', '5', '6', '7', '8', '9',
-    'T', // 10
-    'J', // Jack
-    'Q', // Queen,
-    'K', // King,
-    'A'  // Ace
-  )
-
-  def apply(rank : Char) : Validated[ErrorMsg, Rank] = {
-    if (validOrderedRanks.contains(rank)) Valid(new Rank(rank))
-    else Invalid(ErrorMsg(s"$rank is not valid field for ${Rank.getClass.getName}"))
-  }
-
-  def unsafeApply(rank: Char): Rank = new Rank(rank)
+  override def toString: String = asString
+  override def hashCode(): Int = value
+  override def compare(that: DefinedValue): Int = value - that.value
 }
 
 case class Card(suite: Suite, rank: Rank) extends Ordered[Card] {
